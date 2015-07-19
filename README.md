@@ -1,3 +1,4 @@
+<pre>
 usage: parse_tables.py [-h] [-s SOURCE] [-a] [-d] [-f] [-r] [-i] [-b] [-m]
                        [-n NUMBER] [-F SEPARATOR] [-t]
 
@@ -23,4 +24,4 @@ optional arguments:
   -F SEPARATOR, --separator SEPARATOR
                         field spearator charactar.
   -t, --assist          source html
-
+</pre>
