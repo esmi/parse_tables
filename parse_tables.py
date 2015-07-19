@@ -46,6 +46,7 @@ class tbsparse:
     separator=','
     remove_not_digit=True
     show_href=False
+    debug=False
     def __init__(self,tables):
         self.data = []
         self.tables=tables
@@ -67,8 +68,9 @@ class tbsparse:
 
     def print_all_attrs(self):
         i=0
-        print "tables length:", len(self.tables)
-        print range(len(self.tables))
+        if self.debug:
+            print "tables length:", len(self.tables)
+            print range(len(self.tables))
         '''
         for i in range(len(self.tables)):
             print "table"+str(i)+":",self.get_attrs(i)
@@ -82,7 +84,9 @@ class tbsparse:
         rows = table.findAll('tr')
         for tr in rows:
             cols = tr.findAll('td')
+            td_in_tr=False
             for td in cols:
+                td_in_tr=True
                 links = td.findAll('a', {'href': True})
                 text = td.find(text=True) 
                 if not text: 
@@ -98,10 +102,15 @@ class tbsparse:
                 if td != cols[-1]:
                     text = text + self.separator
                 printf("%s", text)
-            print
+            if td_in_tr:
+                print
 
     def print_the_table(self,tblno):
         self.print_table(self.tables[tblno])
+        return
+
+    def print_the_raw(self,tblno):
+        print str(self.tables[tblno])
         return
 
     def print_tables(self):
@@ -174,13 +183,12 @@ def check_soup(soup,args):
 def run(arg_parser):
 
     args = arg_parser.parse_args()
-    if __debug__:
+    if args.debug:
+        _debug=True
+    else:
+        _debug=False
+    if _debug:
         print str(args)
-        print "show_attr:",args.show_attr
-        print "show_data:",args.show_data
-        print "source:",args.source
-        print "number:",args.number
-        #print "url:", args.url
     if args.source is None:
         print "Warning! --source ("+str(args.source)+") !"
         print ""
@@ -201,7 +209,6 @@ def run(arg_parser):
 
         tables = soup.findAll('table')
 
-        #tbs_parser=parse_tables(tables)
         tbs_parser=tbsparse(tables)
 
         tbs_parser.set_show_href(args.show_href)
@@ -210,45 +217,54 @@ def run(arg_parser):
 
         if args.show_attr:
             if args.assist:
-                print "Attributes for Table("+ ("all" if args.number == 0 else str(args.number)) +"):"
-            if args.number == 0:
+                print "Attributes for Table("+ ("all" if args.number == -1 else str(args.number)) +"):"
+            if args.number == -1:
                 tbs_parser.print_all_attrs()
             else:
                 tbs_parser.print_attr(args.number)
 
+        if args.show_raw:
+            if args.assist:
+                print "Raw info for Table("+ ("all" if args.number == -1 else str(args.number)) +"):"
+            if args.number == -1:
+                # not support all tables on show_raw(), tbs_parser.print_tables()
+                pass
+            else:
+                tbs_parser.print_the_raw(args.number)
+
         if args.show_data:
             if args.assist:
-                print "Data for Table("+ ("all" if args.number == 0 else str(args.number)) +"):"
-            if args.number == 0:
+                print "Data for Table("+ ("all" if args.number == -1 else str(args.number)) +"):"
+            if args.number == -1:
                 tbs_parser.print_tables()
             else:
                 tbs_parser.print_the_table(args.number)
 
         if args.show_form:
             if args.assist:
-                print "Form for Table("+ ("all" if args.number == 0 else str(args.number)) +"):"
-            if args.number == 0:
+                print "Form for Table("+ ("all" if args.number == -1 else str(args.number)) +"):"
+            if args.number == -1:
                 tbs_parser.print_tables()
             else:
                 tbs_parser.print_the_form(args.number)
 
         if args.show_input:
             if args.assist:
-                print "Input for Table("+ ("all" if args.number == 0 else str(args.number)) +"):"
-            if args.number == 0:
+                print "Input for Table("+ ("all" if args.number == -1 else str(args.number)) +"):"
+            if args.number == -1:
                 tbs_parser.print_input()
             else:
                 tbs_parser.print_the_input(args.number)
 
         if args.show_button:
             if args.assist:
-                print "button for Table("+ ("all" if args.number == 0 else str(args.number)) +"):"
-            if args.number == 0:
+                print "button for Table("+ ("all" if args.number == -1 else str(args.number)) +"):"
+            if args.number == -1:
                 tbs_parser.print_button()
             else:
                 tbs_parser.print_the_button(args.number)
-        if __debug__:
-            print "encode:", encode
+        if _debug:
+            print "source encode:", encode
 
 def menu(argv):
     parser = argparse.ArgumentParser(description=(
@@ -256,28 +272,32 @@ def menu(argv):
         ))
     parser.add_argument("-s", "--source", help="source html")
     parser.add_argument("-a","--show-attr", action="store_true",
-            default=True, help="show table attributes")
-    parser.add_argument("-d","--show-data", action="store_true",
             help="show table attributes")
+    parser.add_argument("-d","--show-data", action="store_true",
+            help="show table data.")
+    parser.add_argument("-w","--show-raw", action="store_true", default=False,
+            help="show table raw data, only support on --number is specify.")
+    parser.add_argument("-g","--debug", action="store_true", default=False,
+            help="show debug info.")
 
-    parser.add_argument("-f","--show-form", action="store_true", default=False, 
+    parser.add_argument("-f","--show-form", action="store_true", default=False,
             help="show table embeded form")
-    parser.add_argument("-r","--show-href", action="store_true", default=False, 
+    parser.add_argument("-r","--show-href", action="store_true", default=False,
             help="show data's hyper link.")
-    parser.add_argument("-i","--show-input", action="store_true", default=False, 
+    parser.add_argument("-i","--show-input", action="store_true", default=False,
             help="show <input.../input> tag's attributes.")
-    parser.add_argument("-b","--show-button", action="store_true", default=False, 
+    parser.add_argument("-b","--show-button", action="store_true", default=False,
             help="show <button.../button> tag's attributes.")
-    parser.add_argument("-m","--remove-not-digit", action="store_true", default=False, 
-            help="remove not digit char in number field. Ex: thousand comma, " + 
+    parser.add_argument("-m","--remove-not-digit", action="store_true", default=False,
+            help="remove not digit char in number field. Ex: thousand comma, " +
             "space char in pre-fix , or post-fix position, and plus sign")
 
-    parser.add_argument("-n","--number", type=int,default=0, 
+    parser.add_argument("-n","--number", type=int,default=-1,
             help="which number table to show, default is 0 for all table.")
-    parser.add_argument("-F","--separator", type=str,default=',', 
+    parser.add_argument("-F","--separator", type=str,default=',',
             help="field spearator charactar.")
 
-    parser.add_argument("-t", "--assist", action="store_true",default=True, help="source html")
+    parser.add_argument("-t", "--assist", action="store_true",default=False, help="show assist message")
 
     #parser.add_argument("-o","--output",
     #        help="save to output file")
@@ -291,5 +311,5 @@ def menu(argv):
     #run(parser)
 
 if __name__ == "__main__":
-   run(menu (sys.argv[1:]))
+   run(menu(sys.argv[1:]))
 
