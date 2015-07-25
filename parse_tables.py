@@ -85,12 +85,14 @@ class tbsparse:
         for tr in rows:
             cols = tr.findAll('td')
             td_in_tr=False
+            length=len(cols)
+            i = 0
             for td in cols:
                 td_in_tr=True
                 links = td.findAll('a', {'href': True})
-                text = td.find(text=True) 
-                if not text: 
-                    text = "" + self.separator
+                text = td.find(text=True)
+                if not text:
+                    text = ""
                 else:
                     if self.remove_not_digit:
                         b = text.replace("\xc2\xa0","").replace(" ","").replace(",","").replace("+","")
@@ -99,8 +101,9 @@ class tbsparse:
                 if self.show_href:
                     for link in links:
                         text = text + ":" + link['href']
-                if td != cols[-1]:
+                if i < (length -1) :
                     text = text + self.separator
+                i+=1
                 printf("%s", text)
             if td_in_tr:
                 print
