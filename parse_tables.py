@@ -201,14 +201,15 @@ def run(arg_parser):
         with open(args.source, 'r') as f:
             webpage = f.read()
 
-        soup = BeautifulSoup(webpage)
+        soup = BeautifulSoup(webpage,"lxml")
         check_soup(soup,args)
         encode = get_encoding(soup,webpage)
 
         with open(args.source,'r') as f:
              webpage=f.read().decode(encode, errors='ignore')
 
-        soup = BeautifulSoup(webpage)
+        #soup = BeautifulSoup(webpage)
+        soup = BeautifulSoup(webpage,"lxml")
 
         tables = soup.findAll('table')
 
